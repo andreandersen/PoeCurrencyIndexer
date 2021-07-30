@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 
 namespace PoeCurrencyIndexer.Indexer.Fetch.Models
 {
@@ -11,7 +12,7 @@ namespace PoeCurrencyIndexer.Indexer.Fetch.Models
         public string? LastCharacterName { get; set; }
 
         [JsonPropertyName("items")]
-        public Item[]? Items { get; set; }
+        public Item[] Items { get; set; } = Array.Empty<Item>();
 
         #nullable disable
         [JsonPropertyName("id")]

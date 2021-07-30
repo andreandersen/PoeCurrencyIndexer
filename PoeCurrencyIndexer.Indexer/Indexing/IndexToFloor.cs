@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 
 using PoeCurrencyIndexer.Indexer.Common;
 using PoeCurrencyIndexer.Indexer.Fetch.Models;
+using PoeCurrencyIndexer.Indexer.Indexing.TagLookups;
 
 namespace PoeCurrencyIndexer.Indexer.Indexing
 {
@@ -16,63 +17,59 @@ namespace PoeCurrencyIndexer.Indexer.Indexing
     {
         private readonly ILogger<IndexToFloor> _logger;
         private readonly ChannelReader<RiverResponse> _responses;
-        private readonly BuyoutTagRetriever _buyoutTagRetriever;
+        private readonly IItemTagLookup[] _itemTagLookups;
 
         public IndexToFloor(
             ILogger<IndexToFloor> logger,
-            ChannelReader<RiverResponse> responses)
+            ChannelReader<RiverResponse> responses,
+            IEnumerable<IItemTagLookup> tagLookups)
         {
             _logger = logger;
             _responses = responses;
+            _itemTagLookups = tagLookups.ToArray();
         }
 
         protected async override Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            //var tags = await _buyoutTagRetriever.GetTags();
-
-            HashSet<string> cats = new HashSet<string>();
-
             using var _ = _logger.BeginScope("INDEX");
+
+            var lookupsPerFrameType = _itemTagLookups
+                .SelectMany((e, p) => e.CompatibleFrameTypes, (e, p) => (e, p))
+                .ToLookup(p => p.p, p => p.e)
+                .ToDictionary(p => p.Key, p => p.ToList());
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 RiverResponse response;
                 try { response = await _responses.ReadAsync(cancellationToken); } catch { break; }
 
-                //_logger.LogInformation("{id} has {numStashes} stashes",
-                //    response.CurrentId, response.Stashes?.Count);
+                _logger.LogDebug("{numStashes} stashes discovered in {id}",
+                    response.Stashes?.Length, response.CurrentId);
 
-                if (response.Stashes == null)
+                if (response.Stashes == null || response.Stashes.Length == 0)
                     continue;
 
                 foreach (var stash in response.Stashes)
                 {
-                    if (stash.League == "Expedition")
+                    if (stash.League != "Expedition")
+                        continue;
+
+                    foreach (var item in stash.Items)
                     {
-                        foreach (var item in stash.Items)
-                        {
-                            var cat = item.Extended.Category;
-                            if (!cats.Contains(cat))
-                            {
-                                _logger.LogInformation(cat);
-                                cats.Add(cat);
-                            }
+                        if (!string.IsNullOrEmpty(item.Note))
+                            item.Note = item.Note.Trim();
+
+                        if (string.IsNullOrEmpty(item.Note) || item.Note[0] != '~' ||
+                            !lookupsPerFrameType.ContainsKey(item.FrameType))
                             continue;
 
-                            if (string.IsNullOrEmpty(item.Note))
-                                item.Note = stash.Stash;
-
-                            if (!string.IsNullOrEmpty(item.Note))
-                                item.Note = item.Note.Trim();
-
-                            if (string.IsNullOrEmpty(item.Note) || item.Note[0] != '~')
-                                continue;
-
-                            if (string.IsNullOrEmpty(item.Name))
-                                _logger.LogInformation("{Type,-90} {note,33}",
-                                    item.TypeLine, item.Note);
-                            else
-                                _logger.LogInformation("{Name,-45} {Type,-44} {note,33}",
-                                    item.Name, item.TypeLine, item.Note);
+                        foreach (var look in lookupsPerFrameType[item.FrameType])
+                        {
+                            if (look.TryGet(item, out var id))
+                            {
+                                _logger.LogDebug("{id} for {note}", id, item.Note);
+                                break;
+                            }
                         }
                     }
                 }

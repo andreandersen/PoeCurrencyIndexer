@@ -12,7 +12,7 @@ using PoeCurrencyIndexer.Indexer.Fetch;
 using PoeCurrencyIndexer.Indexer.Fetch.Models;
 using PoeCurrencyIndexer.Indexer.Indexing;
 using PoeCurrencyIndexer.Indexer.Indexing.Models;
-using PoeCurrencyIndexer.Indexer.Indexing.Models.TagLookups;
+using PoeCurrencyIndexer.Indexer.Indexing.TagLookups;
 
 namespace PoeCurrencyIndexer.Host
 {
@@ -42,9 +42,6 @@ namespace PoeCurrencyIndexer.Host
 
                 .AddHttpClient()
 
-                .AddSingleton(typeof(IItemTagLookup), typeof(CurrencyLookup))
-                .AddSingleton(typeof(IItemTagLookup), typeof(MapTagLookup))
-
                 .AddSingleton<AuthorizationHeaderProvider>()
 
                 .AddSingleton(_ => Channel.CreateBounded<RiverResponse>(32))
@@ -57,7 +54,10 @@ namespace PoeCurrencyIndexer.Host
 
                 .AddSingleton<ILastChangeIdReader, LastChangeIdFromPoeNinja>()
                 .AddSingleton<ItemTagResultProvider>()
-                .AddHostedService<BuyoutTagRetriever>()
+                .AddHostedService<ItemTagRetriever>()
+
+                .AddSingleton(typeof(IItemTagLookup), typeof(CurrencyLookup))
+                .AddSingleton(typeof(IItemTagLookup), typeof(MapTagLookup))
 
                 // Hosted Services
                 .AddHostedService<Fetcher>()

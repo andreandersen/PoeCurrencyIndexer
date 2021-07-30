@@ -111,8 +111,10 @@ namespace PoeCurrencyIndexer.Indexer
             //    response.Headers.NonValidated["X-Rate-Limit-Ip"].ToString());
 
             // TODO: Add 429-handling etc
-            if (!response.IsSuccessStatusCode)
-                throw new Exception($"No good response");
+            response.EnsureSuccessStatusCode();
+
+            //if (!response.IsSuccessStatusCode)
+            //    throw new Exception($"No good response");
 
             return response;
         }

@@ -9,8 +9,8 @@ namespace PoeCurrencyIndexer.Indexer.Fetch.Models
         public string Category { get; set; }
         #nullable restore
 
-        [JsonPropertyName("subCategories")]
-        public string[]? SubCategories { get; set; }
+        [JsonPropertyName("subcategories")]
+        public string[] SubCategories { get; set; } = System.Array.Empty<string>()!;
         [JsonPropertyName("prefixes")]
         public int? Prefixes { get; set; }
         [JsonPropertyName("suffixes")]

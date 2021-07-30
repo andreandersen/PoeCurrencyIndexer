@@ -38,8 +38,11 @@ namespace PoeCurrencyIndexer.Indexer.Common
         internal static RiverResponse ToRiverResponse(this MemoryStream input, string currentId)
         {
             var buffer = input.GetBuffer().AsSpan().Slice(0, (int)input.Length);
-            return (RiverResponse)JsonSerializer.Deserialize(
-                buffer, typeof(RiverResponse), RiverResponseJsonContext.Default);
+            var response = (RiverResponse)JsonSerializer.Deserialize(
+                buffer, typeof(RiverResponse), RiverResponseJsonContext.Default)!;
+            response.CurrentId = currentId;
+
+            return response;
         }
     }
 }

@@ -10,14 +10,14 @@ using PoeCurrencyIndexer.Indexer.Indexing.Models;
 
 namespace PoeCurrencyIndexer.Indexer.Indexing
 {
-    public class BuyoutTagRetriever : IHostedService
+    public class ItemTagRetriever : IHostedService
     {
-        private ItemTagResultProvider _tagResultProvider;
+        private readonly ItemTagResultProvider _tagResultProvider;
         private readonly HttpClient _http;
         private readonly ILogger _logger;
 
-        public BuyoutTagRetriever(
-            ILogger<BuyoutTagRetriever> logger,
+        public ItemTagRetriever(
+            ILogger<ItemTagRetriever> logger,
             ItemTagResultProvider tagResultProvider,
             HttpClient http)
         {
@@ -33,7 +33,7 @@ namespace PoeCurrencyIndexer.Indexer.Indexing
             _logger.LogInformation("Getting Item tags...");
 
             var result = await _http.GetFromJsonAsync<ItemTagResult>(
-                "https://www.pathofexile.com/api/trade/data/static");
+                "https://www.pathofexile.com/api/trade/data/static", cancellationToken);
 
             _tagResultProvider.SetResult(result!);
             _logger.LogInformation("Item tags retrieved");

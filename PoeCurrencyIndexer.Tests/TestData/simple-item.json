@@ -1,0 +1,64 @@
+{
+	"id": "31231",
+	"baseType": "Hello",
+	"name": "Allo",
+	"properties": [
+		{
+			"name": "Aura, Spell, AoE, Physical",
+			"values": [],
+			"displayMode": 0
+		},
+		{
+			"name": "Level",
+			"values": [
+				[
+					"1",
+					0
+				]
+			],
+			"displayMode": 0,
+			"type": 5
+		},
+		{
+			"name": "Reservation",
+			"values": [
+				[
+					"50% Mana",
+					0
+				]
+			],
+			"displayMode": 0
+		},
+		{
+			"name": "Cooldown Time",
+			"values": [
+				[
+					"1.20 sec",
+					0
+				]
+			],
+			"displayMode": 0
+		},
+		{
+			"name": "Cast Time",
+			"values": [
+				[
+					"Instant",
+					0
+				]
+			],
+			"displayMode": 0
+		},
+		{
+			"name": "Quality",
+			"values": [
+				[
+					"+20%",
+					1
+				]
+			],
+			"displayMode": 0,
+			"type": 6
+		}
+	]
+}

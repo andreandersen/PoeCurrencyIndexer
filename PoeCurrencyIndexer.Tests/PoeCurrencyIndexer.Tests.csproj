@@ -30,4 +30,12 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="TestData\simple-item.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="TestData\simple-item.json" />
+  </ItemGroup>
+
 </Project>
