@@ -14,17 +14,30 @@ namespace PoeCurrencyIndexer.Tests
     public class ParseTests
     {
         [Fact]
-        public void Test1()
+        public void Can_Deserialize_Item()
         {
-            //// 794225848-807323323-771171918-871117731-831770329
-            //using var json1 = File.OpenRead(@"TestData\public-stash-tabs-1.json");
-            //var parsed = await new Fetcher().Parse(json1);
-
-            //parsed.NextChangeId.Should().Be("794225848-807323323-771171918-871117731-831770329");
-
-
             var json1 = File.ReadAllText(@"TestData\simple-item.json");
             _ = System.Text.Json.JsonSerializer.Deserialize<Item>(json1);
+        }
+
+        [Fact]
+        public void Can_Deserialize_Response()
+        {
+            var json1 = File.ReadAllText(@"TestData\public-stash-tabs-1.json");
+            _ = System.Text.Json.JsonSerializer.Deserialize<RiverResponse>(json1);
+        }
+
+        [Theory]
+        [InlineData("~price  3.45  chaos pepe", 3.45, "chaos")]
+        [InlineData("~b/o 1.24 chaos", 1.24, "chaos")]
+        [InlineData("~price 1.24 chaos", 1.24, "chaos")]
+        [InlineData("~price 1/2 chaos", 0.5, "chaos")]
+        public void Can_Interpret_Price(string stringNote, decimal expectedPrice, string expectedCurrency)
+        {
+            Note note = stringNote;
+            
+            note.Price.Should().Be(expectedPrice);
+            note.Currency.Should().Be(expectedCurrency);
         }
     }
 }

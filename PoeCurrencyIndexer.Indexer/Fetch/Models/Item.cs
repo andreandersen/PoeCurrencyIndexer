@@ -45,7 +45,8 @@ namespace PoeCurrencyIndexer.Indexer.Fetch.Models
         public uint? ItemLevel { get; set; }
 
         [JsonPropertyName("note")]
-        public string? Note { get; set; }
+        [JsonConverter(typeof(NoteJsonConverter))]
+        public Note Note { get; set; } = Note.Empty!;
 
         [JsonPropertyName("duplicated")]
         public bool IsDuplicated { get; set; }
@@ -70,7 +71,7 @@ namespace PoeCurrencyIndexer.Indexer.Fetch.Models
 
         [JsonPropertyName("utilityMods")]
         public string[]? UtilityMods { get; set; }
-        
+
         [JsonPropertyName("implicitMods")]
         public string[]? ImplicitMods { get; set; }
 
@@ -103,7 +104,7 @@ namespace PoeCurrencyIndexer.Indexer.Fetch.Models
 
         [JsonPropertyName("y")]
         public uint? Y { get; set; }
-        
+
         [JsonPropertyName("inventoryId")]
         public string? InventoryId { get; set; }
 

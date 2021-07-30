@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -56,10 +57,7 @@ namespace PoeCurrencyIndexer.Indexer.Indexing
 
                     foreach (var item in stash.Items)
                     {
-                        if (!string.IsNullOrEmpty(item.Note))
-                            item.Note = item.Note.Trim();
-
-                        if (string.IsNullOrEmpty(item.Note) || item.Note[0] != '~' ||
+                        if (!item.Note.IsPriced || 
                             !lookupsPerFrameType.ContainsKey(item.FrameType))
                             continue;
 
@@ -67,7 +65,9 @@ namespace PoeCurrencyIndexer.Indexer.Indexing
                         {
                             if (look.TryGet(item, out var id))
                             {
-                                _logger.LogDebug("{id} for {note}", id, item.Note);
+                                _logger.LogDebug("{id} for {notePrice} {noteCurrency} ({orig})",
+                                    id, item.Note.Price, item.Note.Currency, item.Note.Original);
+                                
                                 break;
                             }
                         }
