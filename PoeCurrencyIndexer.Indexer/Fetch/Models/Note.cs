@@ -6,7 +6,7 @@ namespace PoeCurrencyIndexer.Indexer.Fetch.Models
 {
     public class Note
     {
-        public static readonly Note Empty = new();
+        public readonly static Note Empty = new();
 
         public string Original { get; }
         

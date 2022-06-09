@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -10,6 +8,7 @@ using Microsoft.Extensions.Logging;
 
 using PoeCurrencyIndexer.Indexer.Common;
 using PoeCurrencyIndexer.Indexer.Fetch.Models;
+using PoeCurrencyIndexer.Indexer.Indexing.Models;
 using PoeCurrencyIndexer.Indexer.Indexing.TagLookups;
 
 namespace PoeCurrencyIndexer.Indexer.Indexing
@@ -19,15 +18,18 @@ namespace PoeCurrencyIndexer.Indexer.Indexing
         private readonly ILogger<IndexToFloor> _logger;
         private readonly ChannelReader<RiverResponse> _responses;
         private readonly IItemTagLookup[] _itemTagLookups;
+        private readonly ItemTagResultProvider _itemTagResultsProvider;
 
         public IndexToFloor(
             ILogger<IndexToFloor> logger,
             ChannelReader<RiverResponse> responses,
-            IEnumerable<IItemTagLookup> tagLookups)
+            IEnumerable<IItemTagLookup> tagLookups,
+            ItemTagResultProvider itemTagResultsProvider)
         {
             _logger = logger;
             _responses = responses;
             _itemTagLookups = tagLookups.ToArray();
+            _itemTagResultsProvider = itemTagResultsProvider;
         }
 
         protected async override Task ExecuteAsync(CancellationToken cancellationToken)
@@ -57,7 +59,7 @@ namespace PoeCurrencyIndexer.Indexer.Indexing
 
                     foreach (var item in stash.Items)
                     {
-                        if (!item.Note.IsPriced || 
+                        if (!item.Note.IsPriced ||
                             !lookupsPerFrameType.ContainsKey(item.FrameType))
                             continue;
 
@@ -65,9 +67,18 @@ namespace PoeCurrencyIndexer.Indexer.Indexing
                         {
                             if (look.TryGet(item, out var id))
                             {
-                                _logger.LogDebug("{id} for {notePrice} {noteCurrency} ({orig})",
-                                    id, item.Note.Price, item.Note.Currency, item.Note.Original);
-                                
+                                var currencyValidated = _itemTagResultsProvider.Value!
+                                    .TagToText.TryGetValue(
+                                    item.Note.Currency!, out var validatedCurrency);
+
+                                if (!currencyValidated)
+                                {
+                                    _logger.LogInformation("Invalid currency: {currency}", item.Note.Currency);
+                                    _logger.LogInformation("{id} for {notePrice} {noteCurrency} ({orig})",
+                                        id, item.Note.Price, item.Note.Currency, item.Note.Original);
+                                }
+
+
                                 break;
                             }
                         }

@@ -16,7 +16,7 @@ namespace PoeCurrencyIndexer.Indexer.Indexing.Models
             Result = result;
 
             TextToTag = result
-                .ToDictionary(p => p.Id, p => p.Entries.ToDictionary(e => e.Text ?? string.Empty))!;
+                .ToDictionary(p => p.Id, p => p.Entries.GroupBy(e => e.Text ?? string.Empty).ToDictionary(q => q.First().Text, k => k.First()))!;
 
             TagToText = result
                 .SelectMany(p => p.Entries)

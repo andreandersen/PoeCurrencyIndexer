@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Security.Cryptography;
 
 using Microsoft.Extensions.Logging;
 
@@ -49,16 +51,37 @@ namespace PoeCurrencyIndexer.Indexer.Indexing.TagLookups
             
             if (!_currencyLookup!.TryGetValue(item.BaseType, out result))
             {
-                if (!_blackList.Contains(item.BaseType) && (item.FrameType == FrameType.Currency || item.Extended.Category == "currency"))
+                if (!_blackList.Contains(item.BaseType) &&
+                    (item.FrameType == FrameType.Currency ||item.Extended.Category == "currency"))
                 {
                     _blackList.Add(item.BaseType);
                     var subcats = (" " + string.Join(", ", item.Extended.SubCategories)).TrimEnd();
-                    Logger.LogWarning("{BaseType} not found in tags with category {cat}{subcats}", item.BaseType, item.Extended.Category, subcats);
+                    //Logger.LogWarning("{BaseType} not found in tags with category {cat}{subcats}", item.BaseType, item.Extended.Category, subcats);
                 }
                 return false;
             }
 
             return true;
         }
+    }
+
+    public abstract class Maybe<T>
+    {
+        private Maybe() { }
+
+        public sealed class Some : Maybe<T>
+        {
+            public T Value { get; }
+
+            public Some(T value) => Value = value;
+
+            public static implicit operator T(Some val) =>
+                val.Value;
+        }
+
+        public sealed class None : Maybe<T> { }
+
+        public static implicit operator Maybe<T>(T val) => 
+            val == null ? new None() : new Some(val);
     }
 }

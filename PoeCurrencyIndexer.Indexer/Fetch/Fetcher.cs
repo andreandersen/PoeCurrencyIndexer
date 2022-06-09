@@ -83,13 +83,13 @@ namespace PoeCurrencyIndexer.Indexer
                 return;
 
             var sinceLast = DateTime.Now.Subtract(_lastAccess).TotalMilliseconds;
-            //_logger.LogDebug("Dispatch: Time since last request is {sinceLast}",
-            //    Convert.ToInt32(sinceLast));
+            _logger.LogDebug("Dispatch: Time since last request is {sinceLast}",
+                Convert.ToInt32(sinceLast));
 
             var wait = Convert.ToInt32(TimeBetweenRequests.TotalMilliseconds - sinceLast);
             if (wait > 0)
             {
-                //_logger.LogDebug("Dispatch: Waiting for {wait} ms...", wait);
+                _logger.LogDebug("Dispatch: Waiting for {wait} ms...", wait);
                 await Task.Delay(wait, stoppingToken);
             }
         }
@@ -97,7 +97,7 @@ namespace PoeCurrencyIndexer.Indexer
         private async Task<HttpResponseMessage> Connect(string id)
         {
             var sw = Stopwatch.StartNew();
-            //_logger.LogDebug("Connecting - {id}", id);
+            _logger.LogDebug("Connecting - {id}", id);
             _lastAccess = DateTime.Now.AddMilliseconds(150);
 
             var response = await _http.GetAsync(BaseUrl + id,
@@ -106,17 +106,14 @@ namespace PoeCurrencyIndexer.Indexer
             _logger.LogDebug("Connected - {id}, took {elapsed} ms",
                 id, sw.RestartAndGetElapsedMs());
 
-            //_logger.LogInformation("Rate-limit state: {state} ({limit})",
-            //    response.Headers.NonValidated["X-Rate-Limit-Ip-State"].ToString(),
-            //    response.Headers.NonValidated["X-Rate-Limit-Ip"].ToString());
+            _logger.LogInformation("Rate-limit state: {state} ({limit})",
+                response.Headers.NonValidated["X-Rate-Limit-Ip-State"].ToString(),
+                response.Headers.NonValidated["X-Rate-Limit-Ip"].ToString());
 
             // TODO: Add 429-handling etc
             response.EnsureSuccessStatusCode();
 
-            //if (!response.IsSuccessStatusCode)
-            //    throw new Exception($"No good response");
-
-            return response;
+            return !response.IsSuccessStatusCode ? throw new Exception($"No good response") : response;
         }
 
         private async Task GetChanges(HttpResponseMessage response, string id)
@@ -132,7 +129,7 @@ namespace PoeCurrencyIndexer.Indexer
                 await _changeIdWriter.WriteAsync(nextId);
 
                 _logger.LogDebug("Found next - {id}, took {elapsed} ms",
-                    id, sw.RestartAndGetElapsedMs(), nextId);
+                    id, sw.RestartAndGetElapsedMs());
 
                 await sourceStream.CopyToAsync(memStream);
 
